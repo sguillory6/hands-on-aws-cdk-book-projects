@@ -4,7 +4,7 @@
 // Import source map suppoer
 import "source-map-support/register";
 // Import the cdk library
-import * as cdk from "aws-cdk-lib";
+import * as cdk from 'aws-cdk-lib';
 // Here we import all the stack and resources that
 // we are deploying within the app
 import { HelloCdkStack } from "../lib/stack-hello-cdk";
