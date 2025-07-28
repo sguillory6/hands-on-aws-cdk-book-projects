@@ -1,6 +1,4 @@
-// const aws = require("aws-sdk");
-//const { S3Client } = import("@aws-sdk/client-s3");
-import { S3Client } from '@aws-sdk/client-s3'
+import {GetObjectCommand, S3Client} from '@aws-sdk/client-s3'
 const s3Client = new S3Client({});
 
 /**
@@ -9,35 +7,54 @@ const s3Client = new S3Client({});
  * @param {Object} event - The S3 event data
  * @returns {Object} - The response including body and statusCode
  */
-// exports.main = async (event) => {
 export const handler = async (event, context) => {
-  const msg = "Hello, CDK!"
-  console.log(msg)
+  console.log('Lambda function invoked')
 
-  // // Get bucket and object key from event
-  // const bucket = event.Records[0].s3.bucket.name;
-  // const key = event.Records[0].s3.object.key;
-  //
-  // // Get object data from S3
-  // const params = {
-  //   Bucket: bucket,
-  //   Key: key,
-  // };
-  // const data = await s3.getObject(params).promise();
-  //
-  // // Extract name from object data
-  // const name = data.Body.toString("utf-8").trim();
-  //
-  // // Print greeting with name
-  // const msg = `Hello, ${name}! I am your new energy assistant.`;
+  // Get bucket and object key from event
+  const bucket = event.Records[0].s3.bucket.name;
+  const key = event.Records[0].s3.object.key;
+  console.log(`Bucket: ${bucket}`);
+  console.log(`Key: ${key}`);
 
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      message: msg,
-    }),
+  // Get object data from S3
+  const params = {
+    Bucket: bucket,
+    Key: key,
   };
-};
 
-// module.export = { main };
-//export { handler };
+  try {
+    const command = new GetObjectCommand(params);
+    const response = await s3Client.send(command);
+
+    // Convert stream to string
+    const stream = response.Body;
+    const chunks = [];
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+    const buffer = Buffer.concat(chunks);
+    const name = buffer.toString("utf-8").trim();
+
+    console.log(`Name extracted from S3 object: "${name}"`);
+
+    // Print greeting with name
+    const msg = `Hello, ${name}! I am your new energy assistant.`;
+    console.log(`Greeting: ${msg}`)
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        message: msg,
+      }),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        message: "Error processing request",
+        error: error.message,
+      }),
+    };
+  }
+};
