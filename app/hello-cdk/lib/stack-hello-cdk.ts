@@ -27,7 +27,7 @@ export class HelloCdkStack extends cdk.Stack {
     // Create Lambda function to generate greeting
     const helloCdkLambdaFunction = new lambda.Function(this, "HelloCdkLambda", {
       runtime: lambda.Runtime.NODEJS_18_X,
-      handler: "index.main",
+      handler: "index.handler",
       code: lambda.Code.fromAsset(
         path.join(__dirname, "./lambda/lambda-hello-cdk")
       ),
