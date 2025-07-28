@@ -4,7 +4,7 @@
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
-import * as s3 from "aws-cdk-lib/aws-s3";
+import { CfnBucket } from "aws-cdk-lib/aws-s3";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
 
 /**
@@ -21,8 +21,14 @@ export class HelloCdkStack extends cdk.Stack {
     // Call super constructor
     super(scope, id, props);
 
-    // Create S3 bucket for uploading greetings
-    const helloCdkS3Bucket = new s3.Bucket(this, "HelloCdkS3Bucket");
+    // Level 1 (L1) construct for S3 Bucket
+    // Note: Hard-coded names can collide.
+    // Consider omitting `bucketName` for auto-generated names.
+    const rawDataBucket = new CfnBucket(this, 'rawDataBucket', {
+      // bucketName: 'raw-data-landing-zone-greeting',
+      accessControl: 'Private',
+      // other bucket properties
+    });
 
     // Create Lambda function to generate greeting
     const helloCdkLambdaFunction = new lambda.Function(this, "HelloCdkLambda", {
@@ -33,16 +39,9 @@ export class HelloCdkStack extends cdk.Stack {
       ),
     });
 
-    // Invoke lambda when new object created in S3 bucket
-    helloCdkS3Bucket.addEventNotification(
-      s3.EventType.OBJECT_CREATED,
-      new s3n.LambdaDestination(helloCdkLambdaFunction),
-      { suffix: ".txt" }
-    );
-
     // Output S3 bucket name
     new cdk.CfnOutput(this, "bucketName", {
-      value: helloCdkS3Bucket.bucketName,
+      value: rawDataBucket.bucketName!
     });
   }
 }
