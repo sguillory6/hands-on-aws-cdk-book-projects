@@ -4,7 +4,7 @@
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
-import * as s3 from "aws-cdk-lib/aws-s3";
+import {Bucket, BucketEncryption, EventType } from "aws-cdk-lib/aws-s3";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
 
 /**
@@ -22,7 +22,11 @@ export class HelloCdkStack extends cdk.Stack {
     super(scope, id, props);
 
     // Create S3 bucket for uploading greetings
-    const helloCdkS3Bucket = new s3.Bucket(this, "HelloCdkS3Bucket");
+    const s3Bucket = new Bucket(this, "MyS3Bucket", {
+      bucketName: "stang-my-s3-bucket",
+      encryption: BucketEncryption.KMS,
+      versioned: true
+    });
 
     // Create Lambda function to generate greeting
     const helloCdkLambdaFunction = new lambda.Function(this, "HelloCdkLambda", {
@@ -34,15 +38,15 @@ export class HelloCdkStack extends cdk.Stack {
     });
 
     // Invoke lambda when new object created in S3 bucket
-    helloCdkS3Bucket.addEventNotification(
-      s3.EventType.OBJECT_CREATED,
+    s3Bucket.addEventNotification(
+      EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(helloCdkLambdaFunction),
       { suffix: ".txt" }
     );
 
     // Output S3 bucket name
     new cdk.CfnOutput(this, "bucketName", {
-      value: helloCdkS3Bucket.bucketName,
+      value: s3Bucket.bucketName,
     });
   }
 }
